@@ -2,7 +2,7 @@
  * Heartbeat publisher.
  *
  * Sends a signed snapshot of the bot's last-24h stats to
- * `POST /v1/bot/heartbeat` every `intervalMs`. The api-server verifies the
+ * `POST /bot/heartbeat` every `intervalMs`. The api-server verifies the
  * Ed25519 signature, cross-checks against on-chain activity, and surfaces
  * the data on the public Leaderboard.
  *
@@ -82,7 +82,7 @@ export class HeartbeatPublisher {
     const signature = this.signCanonical(canonical);
     const body = {...canonical, signature};
 
-    const res = await fetch(`${this.opts.apiUrl}/v1/bot/heartbeat`, {
+    const res = await fetch(`${this.opts.apiUrl}/bot/heartbeat`, {
       method: 'POST',
       headers: {'content-type': 'application/json'},
       body: JSON.stringify(body),
