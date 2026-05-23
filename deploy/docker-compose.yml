@@ -1,0 +1,47 @@
+# Self-hosted Docker Compose template for the GeniusYield arb bot.
+#
+# Usage:
+#   cp ../.env.example ../.env       (then edit .env with your values)
+#   docker compose up -d
+#   docker compose logs -f
+#
+# The bot runs as a non-root user inside the image and listens on :9100
+# for /healthz + /metrics. It does NOT need to be reachable from the
+# public internet — these endpoints are for local monitoring only.
+
+services:
+  arb-bot:
+    image: ghcr.io/geniusyield/arb-bot:latest
+    container_name: gy-arb-bot
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    ports:
+      # Expose only on localhost so /healthz + /metrics aren't reachable
+      # from the public internet. Remove "127.0.0.1:" if you want to
+      # scrape metrics from another host on your LAN.
+      - "127.0.0.1:9100:9100"
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:9100/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    # Resource limits — bot is light. Adjust if you run multiple pairs.
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.5"
+
+  # Optional: bundled Prometheus to scrape the bot's /metrics endpoint.
+  # Uncomment if you want a local Grafana stack.
+  #
+  # prometheus:
+  #   image: prom/prometheus:latest
+  #   container_name: gy-arb-prom
+  #   restart: unless-stopped
+  #   volumes:
+  #     - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+  #   ports:
+  #     - "127.0.0.1:9090:9090"

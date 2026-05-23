@@ -1,0 +1,97 @@
+# DigitalOcean App Platform spec for the GeniusYield arb bot.
+#
+# Usage (one-time setup):
+#   doctl apps create --spec digitalocean-app.yaml
+#
+# Or paste the contents into the "Edit Your App Spec" YAML editor in the
+# App Platform web UI. After creating the app, set the SECRET env vars
+# (WALLET_SEED, BLOCKFROST_API_KEY, DEXHUNTER_API_KEY) via the UI — the
+# spec file should NOT contain them, since it may end up in version
+# control.
+
+name: gy-arb-bot
+region: nyc  # nyc, ams, fra, sgp, sfo, blr, syd... pick closest
+
+services:
+  - name: bot
+    # The bot doesn't need ingress traffic — it's an outbound polling
+    # worker. We expose /healthz only so DO's health checker can verify
+    # liveness. Internal_ports keeps it off the public internet.
+    internal_ports:
+      - 9100
+    instance_count: 1
+    instance_size_slug: basic-xxs  # cheapest tier — ~$5/mo
+
+    image:
+      registry_type: GHCR
+      registry: geniusyield
+      repository: arb-bot
+      tag: latest
+
+    health_check:
+      http_path: /healthz
+      port: 9100
+      initial_delay_seconds: 10
+      period_seconds: 30
+      timeout_seconds: 5
+      failure_threshold: 3
+
+    # Non-secret env vars. SECRET values are configured in the UI to keep
+    # them out of this YAML file.
+    envs:
+      - key: NETWORK
+        value: Mainnet
+        scope: RUN_TIME
+        type: GENERAL
+
+      - key: GY_API_URL
+        value: https://api.prod.geniusyield.co
+        scope: RUN_TIME
+        type: GENERAL
+
+      - key: BASE_ASSET_ID
+        # Replace with your pair's base asset id, e.g. NMKR or NIGHT.
+        value: asset1lgultx63fukjlhsncmwp235pcnh4fh988phh7f
+        scope: RUN_TIME
+        type: GENERAL
+
+      - key: QUOTE_ASSET_ID
+        # ADA's asset id is the standard quote.
+        value: asset1xdz4yj4ldwlpsz2yjgjtt9evg9uskm8jrzjwhj
+        scope: RUN_TIME
+        type: GENERAL
+
+      - key: AMM_SOURCE
+        value: dexhunter
+        scope: RUN_TIME
+        type: GENERAL
+
+      - key: MIN_PROFIT_BPS
+        value: "50"
+        scope: RUN_TIME
+        type: GENERAL
+
+      - key: MAX_FILL_BASE
+        value: "200000000"
+        scope: RUN_TIME
+        type: GENERAL
+
+      - key: POLL_INTERVAL_MS
+        value: "8000"
+        scope: RUN_TIME
+        type: GENERAL
+
+      # SECRET env vars — DO NOT include values here. Set via the UI.
+      # The "type: SECRET" tells the App Platform to treat them as
+      # encrypted, masked in logs, and not exported in the spec.
+      - key: WALLET_SEED
+        scope: RUN_TIME
+        type: SECRET
+
+      - key: BLOCKFROST_API_KEY
+        scope: RUN_TIME
+        type: SECRET
+
+      - key: DEXHUNTER_API_KEY
+        scope: RUN_TIME
+        type: SECRET

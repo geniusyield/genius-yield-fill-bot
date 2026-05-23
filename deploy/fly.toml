@@ -1,0 +1,55 @@
+# Fly.io launch template for the GeniusYield arb bot.
+#
+# Usage:
+#   fly launch --image ghcr.io/geniusyield/arb-bot:latest --no-deploy
+#   fly secrets set NETWORK=Mainnet GY_API_URL=... WALLET_SEED=...
+#   fly deploy
+#
+# Smallest VM (256 MB / shared-cpu-1x) is enough for one pair. Scale up
+# if you run multiple pairs in one machine, or run several machines for
+# horizontal capacity (one per pair).
+
+app = "gy-arb-bot"
+primary_region = "iad"  # change to your closest region: iad, lax, cdg, fra, syd...
+kill_signal = "SIGTERM"
+kill_timeout = "30s"
+
+[build]
+  image = "ghcr.io/geniusyield/arb-bot:latest"
+
+[env]
+  # Non-sensitive defaults. Override with `fly secrets set`.
+  POLL_INTERVAL_MS = "8000"
+  MIN_PROFIT_BPS = "50"
+  MAX_FILL_BASE = "200000000"
+  AMM_SOURCE = "dexhunter"
+  METRICS_PORT = "9100"
+
+[[services]]
+  internal_port = 9100
+  protocol = "tcp"
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [services.concurrency]
+    type = "requests"
+    hard_limit = 10
+    soft_limit = 5
+
+  [[services.ports]]
+    port = 9100
+    handlers = ["http"]
+    force_https = false
+
+  [[services.http_checks]]
+    interval = "30s"
+    grace_period = "10s"
+    method = "get"
+    path = "/healthz"
+    protocol = "http"
+    timeout = "5s"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"

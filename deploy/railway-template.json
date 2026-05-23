@@ -1,0 +1,66 @@
+{
+  "$schema": "https://railway.app/template.schema.json",
+  "name": "GeniusYield Arb Bot",
+  "description": "Run your own market-maker bot that fills GeniusYield SLV orders by arbing against DexHunter and external Cardano DEXes. Non-custodial: you hold the wallet seed.",
+  "tags": ["cardano", "dex", "market-maker", "geniusyield"],
+  "iconUrl": "https://prod.geniusyield.co/favicon-32x32.png",
+  "services": [
+    {
+      "name": "arb-bot",
+      "source": {
+        "image": "ghcr.io/geniusyield/arb-bot:latest"
+      },
+      "variables": {
+        "NETWORK": {
+          "default": "Mainnet",
+          "description": "Cardano network (Mainnet, Preprod, Preview)"
+        },
+        "GY_API_URL": {
+          "default": "https://api.prod.geniusyield.co",
+          "description": "GeniusYield backend API base URL"
+        },
+        "BASE_ASSET_ID": {
+          "description": "Base asset of the pair you want to trade (e.g. NMKR's assetId)"
+        },
+        "QUOTE_ASSET_ID": {
+          "default": "asset1xdz4yj4ldwlpsz2yjgjtt9evg9uskm8jrzjwhj",
+          "description": "Quote asset (ADA by default)"
+        },
+        "WALLET_SEED": {
+          "isSecret": true,
+          "description": "Your bot wallet seed phrase. Treated as a Railway secret — encrypted at rest, masked in logs."
+        },
+        "BLOCKFROST_API_KEY": {
+          "isSecret": true,
+          "description": "Free Blockfrost API key from https://blockfrost.io"
+        },
+        "AMM_SOURCE": {
+          "default": "dexhunter",
+          "description": "Either 'dexhunter' (real) or 'mock' (for testing without funds)"
+        },
+        "DEXHUNTER_API_KEY": {
+          "isSecret": true,
+          "description": "Get from https://dexhunter.gitbook.io/dexhunter-partners"
+        },
+        "MIN_PROFIT_BPS": {
+          "default": "50",
+          "description": "Minimum profit threshold in basis points (50 = 0.5%)"
+        },
+        "MAX_FILL_BASE": {
+          "default": "200000000",
+          "description": "Max single-fill size in base asset indivisible units"
+        },
+        "POLL_INTERVAL_MS": {
+          "default": "8000",
+          "description": "How often to scan for arb opportunities (milliseconds)"
+        }
+      },
+      "healthcheck": {
+        "path": "/healthz",
+        "port": 9100,
+        "intervalSec": 30,
+        "timeoutSec": 5
+      }
+    }
+  ]
+}
