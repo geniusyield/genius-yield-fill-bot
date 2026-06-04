@@ -45,12 +45,22 @@ export const loadConfig = (): Config => {
   if (network !== 'Mainnet' && network !== 'Preview' && network !== 'Preprod') {
     throw new Error(`Invalid NETWORK: ${network} (must be Mainnet|Preview|Preprod)`);
   }
-  const ammSource = (process.env.AMM_SOURCE ?? 'mock').toLowerCase();
+  const ammSource = (process.env.AMM_SOURCE ?? 'dexhunter').toLowerCase();
   if (ammSource !== 'mock' && ammSource !== 'dexhunter') {
     throw new Error(`Invalid AMM_SOURCE: ${ammSource} (must be mock|dexhunter)`);
   }
   if (ammSource === 'dexhunter' && !process.env.DEXHUNTER_API_KEY) {
     throw new Error('AMM_SOURCE=dexhunter requires DEXHUNTER_API_KEY');
+  }
+  // Refuse to run live with the mock source. The mock returns price "0",
+  // which makes every order look infinitely profitable and the bot would
+  // fill the book until the wallet is empty. Mock is only safe in
+  // dry-run mode where no submission happens.
+  if (ammSource === 'mock' && process.env.DRY_RUN !== 'true') {
+    throw new Error(
+      'AMM_SOURCE=mock is only allowed with DRY_RUN=true. ' +
+        'Set AMM_SOURCE=dexhunter (with DEXHUNTER_API_KEY) for live trading.'
+    );
   }
 
   const heartbeatEnabled = process.env.HEARTBEAT_ENABLED !== 'false';

@@ -66,6 +66,15 @@ export type FillSubmitRequest = {
   unsignedTxCbor: string;
   walletWitness: string;
   quoteId: string;
+  /**
+   * Caller-side identity binding. Must equal the `taker.changeAddress`
+   * supplied to fillQuote. Server rejects mismatches with
+   * `409 QUOTE_TAKER_MISMATCH`. Optional on the wire today for v1.x
+   * backwards-compat; required from v2. Always pass it from this client.
+   */
+  taker?: {
+    changeAddress: string;
+  };
 };
 
 export type FillSubmitResponse = {

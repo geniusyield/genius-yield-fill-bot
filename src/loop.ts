@@ -141,6 +141,7 @@ const tryFill = async (
       unsignedTxCbor: quote.unsignedTxCbor,
       walletWitness: witness,
       quoteId: quote.quoteId,
+      taker: {changeAddress: ctx.changeAddress},
     });
     // Captured profit (lovelace) estimate: gross spread × fill notional in
     // base ADA units. The on-chain reality may differ once protocol fees
