@@ -33,9 +33,19 @@ const main = async (): Promise<void> => {
       amm = new DexHunterAmmSource(cfg.dexhunterApiKey);
       break;
     case 'mock':
-    default:
+      // loadConfig() already refuses mock unless DRY_RUN=true, so we only
+      // reach this case in dry-run. Construct the fixed-price mock and
+      // proceed — no submits will be sent.
       amm = new MockAmmSource('0');
       break;
+    default: {
+      // Exhaustiveness check: if a new AmmSourceKind is added without a
+      // matching case here, this becomes a compile error instead of
+      // silently falling through to a "0" price MockAmmSource at runtime
+      // (which would make every order look infinitely profitable).
+      const _exhaustive: never = cfg.ammSource;
+      throw new Error(`Unhandled AMM_SOURCE: ${String(_exhaustive)}`);
+    }
   }
 
   const wallet = await Wallet.fromSeed(
